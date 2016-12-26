@@ -667,11 +667,46 @@ function day10_two_chips($bots){
   return false;
 }
 
-function day10_1(){
+function day10_instruction($bot){
+  global $bots, $output, $compare, $n;
+
+  $instructions = $bots[$bot];
+
+  if (count($instructions['chips']) == 2){
+    list($chip1, $chip2) = $instructions['chips'];
+
+    $low = min($chip1, $chip2);
+    $high = max($chip1, $chip2);
+
+    if ($low == $compare['low'] && $high == $compare['high']){
+      return $bot;
+    }
+
+    $bots[$bot]['chips'] = array();
+
+    list($to, $number) = explode(' ', $instructions['low']);
+    #var_dump(++$n.') bot '.$bot.' low '.$low.' to '.$to.' '.$number);
+    switch ($to){
+      case 'bot' : $bots[$number]['chips'][] = $low; break;
+      case 'output' : $output[$number] = $low; break;
+    }
+
+    list($to, $number) = explode(' ', $instructions['high']);
+    #var_dump(++$n.') bot '.$bot.' high '.$high.' to '.$to.' '.$number);
+    switch ($to){
+      case 'bot' : $bots[$number]['chips'][] = $high; break;
+      case 'output' : $output[$number] = $high; break;
+    }
+  }
+}
+
+function day10_input(){
+  global $bots, $output, $compare;
+
   $file = file_get_contents('day10.txt');
   $datas = explode("\r\n", $file);
 
-  $bots = array();
+  $bots = $output = array();
 
   foreach ($datas as $instruction){
     if (preg_match('/^value (\d+) goes to bot (\d+)$/', $instruction, $matches)){
@@ -685,21 +720,34 @@ function day10_1(){
       $bots[$bot]['high'] = $high;
     }
   }
+}
+
+function day10_1(){
+  global $bots, $output, $compare;
+
+  $compare = array('low' => 17, 'high' => 61);
+  day10_input();
 
   do {
     foreach ($bots as $bot => $instructions){
-      if (count($instructions['chips']) == 2){
-        list($chip1, $chip2) = $instructions['chips'];
-
-        $low = min($chip1, $chip2);
-        $high = max($chip1, $chip2);
-
-        $instructions['chips'] = array();
-      }
+      if ($answer = day10_instruction($bot))
+        return $answer;
     }
   } while (day10_two_chips($bots));
+}
 
-  var_dump($bots);
 
-  return $count;
+function day10_2(){
+  global $bots, $output, $compare;
+
+  $compare = array();
+  day10_input();
+
+  do {
+    foreach ($bots as $bot => $instructions)
+      day10_instruction($bot);
+  } while (day10_two_chips($bots));
+
+  ksort($output);
+  return array_product(array_slice($output, 0, 3));
 }
