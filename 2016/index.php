@@ -64,6 +64,7 @@ function show_answers($a = ''){
   if (!$a || $a == '18.2') print_answer('18.2', day18_2());
 
   if (!$a || $a == '19.1') print_answer('19.1', day19_1());
+  if (!$a || $a == '19.2') print_answer('19.2', day19_2());
 
   if (!$a || $a == '20.1') print_answer('20.1', day20_1());
 
@@ -751,3 +752,341 @@ function day10_2(){
   ksort($output);
   return array_product(array_slice($output, 0, 3));
 }
+
+function day11_assemble(){
+  global $floors;
+
+  for ($i = 1; $i <= count($floors) - 1; $i++){
+    if (count($floors[$i]['microchip']) || count($floors[$i]['generator']))
+      return false;
+  }
+
+  return true;
+}
+
+function day11_test($object, $floor){
+
+}
+
+function day11_1(){
+  global $floors;
+
+  $file = file_get_contents('day11test.txt');
+  $datas = explode("\r\n", $file);
+
+  $elevator = array(
+    'floor' => 1,
+    'contents' => array(),
+  );
+
+  foreach ($datas as $floor => $data){
+    preg_match('/^The \w+ floor contains (.*)./', $data, $matches);
+
+    $objects = preg_split('/, and |, | and /', $matches[1]);
+
+    foreach ($objects as $object){
+      if (substr($object, 0, 2) == 'a '){
+        list($foo, $element, $type) = explode(' ', $object);
+
+        $floors[$floor + 1][$type][] = str_replace('-compatible', '', $element);
+      }
+    }
+  }
+
+  do {
+    $objects = $floors[$elevator['floor']];
+
+
+  } while (!day11_assemble());
+
+  var_dump($floors);
+}
+
+function day12_1(){
+  $file = file_get_contents('day12test.txt');
+  $datas = explode("\r\n", $file);
+
+  $register = array(
+    'a' => 0,
+    'b' => 0,
+    'c' => 0,
+    'd' => 0,
+  );
+
+  while ($data = current($datas)){
+    list($instruction, $value, $to) = explode(' ', $data);
+
+    switch ($instruction){
+      case 'cpy' :
+        if (preg_match('/\D/', $value))
+          $value = $register[$value];
+
+        $register[$to] += $value;
+        next($datas);
+        break;
+
+      case 'inc' :
+        $register[$value]++;
+        next($datas);
+        break;
+
+      case 'dec' :
+        $register[$value]--;
+        next($datas);
+        break;
+
+      case 'jnz' :
+        if (preg_match('/\D/', $value))
+          $value = $register[$value];
+
+        if ($value <> 0){
+          for ($i = 0; $i < abs($to); $i++)
+            $to < 0 ? prev($datas) : next($datas);
+        }else
+          next($datas);
+        break;
+    }
+
+    /*$n++;
+    if ($n == 15)
+      exit;*/
+
+    #var_dump($n++, key($datas), $register);
+  }
+
+  var_dump($register);
+}
+
+function day14_keys($keys_total, $stretches, $lookahead){
+  global $hashes;
+
+  $input = file_get_contents('day14.txt');
+
+  $keys = $hashes = array();
+  $index = 0;
+
+  do {
+    $md5 = day14_md5_stretch($input, $index, $stretches);
+
+    if (preg_match('/(.)\\1{2}/', $md5, $matches)){
+      $match = $matches[0];
+      for ($i = 1; $i <= $lookahead; $i++){
+        $md52 = day14_md5_stretch($input, $index + $i, $stretches);
+
+        if (preg_match('/('.$match{0}.')\\1{4}/', $md52)){
+          if (!in_array($md5, $keys)){
+            $keys[] = $md5;
+            echo '#'.count($keys).' : '.$md5.' ['.$index.' & '.($index + $i).']'.PHP_EOL;
+
+            break;
+          }
+        }
+      }
+    }
+
+    $index++;
+  } while (count($keys) < $keys_total);
+
+  echo PHP_EOL;
+
+  return $index - 1;
+}
+
+function day14_md5_stretch($input, $index, $stretches){
+  global $hashes;
+
+  if ($hashes[$index])
+    return $hashes[$index];
+
+  $string = md5($input.$index);
+
+  for ($i = 0; $i < $stretches; $i++)
+    $string = md5($string);
+
+  $hashes[$index] = $string;
+
+  return $string;
+}
+
+function day14_1(){
+  $keys_total = 64;
+  $stretches = 0;
+  $lookahead = 1000;
+
+  return day14_keys($keys_total, $stretches, $lookahead);
+}
+
+function day14_2(){
+  $keys_total = 64;
+  $stretches = 2016;
+  $lookahead = 1000;
+
+  return day14_keys($keys_total, $stretches, $lookahead);
+}
+
+function day15_discs(){
+  $file = file_get_contents('day15.txt');
+  $datas = explode("\r\n", $file);
+
+  $discs = array();
+  foreach ($datas as $data){
+    preg_match('/Disc #(\d+) has (\d+) positions; at time=0, it is at position (\d+)./', $data, $matches);
+
+    $discs[$matches[1]] = array('positions' => intval($matches[2]), 'start' => intval($matches[3]));
+  }
+
+  return $discs;
+}
+
+function day15_capsule($discs){
+  $time = 0;
+
+  do {
+    $tick = $time++;
+
+    foreach ($discs as $disc => $prop){
+      $aligned = false;
+
+      if (($prop['start'] + ++$tick) % $prop['positions'] != 0)
+        break;
+
+      $aligned = true;
+    }
+  } while (!$aligned);
+
+  return $time - 1;
+}
+
+function day15_1(){
+  $discs = day15_discs();
+
+  return day15_capsule($discs);
+}
+
+function day15_2(){
+  $discs = day15_discs();
+  $discs[] = array('positions' => 11, 'start' => 0);
+
+  return day15_capsule($discs);
+}
+
+function day16_checksum($length){
+  $input = file_get_contents('day16.txt');
+
+  $a = $input;
+  do {
+    $a .= '0'.strtr(strrev($a), array(0 => 1, 1 => 0));
+  } while (strlen($a) < $length);
+
+  $data = substr($a, 0, $length);
+
+  do {
+    $checksum = '';
+
+    for ($i = 0; $i < strlen($data); $i += 2){
+      $pair = substr($data, $i, 2);
+
+      $checksum .= $pair{0} == $pair{1} ? 1 : 0;
+    }
+
+    $data = $checksum;
+  } while (strlen($checksum) % 2 == 0);
+
+  return $checksum;
+}
+
+function day16_1(){
+  $length = 272;
+
+  return day16_checksum($length);
+}
+
+function day16_2(){
+  $length = 35651584;
+
+  return day16_checksum($length);
+}
+
+function day18_calc($rows){
+  $input = file_get_contents('day18.txt');
+
+  $tiles = array(0 => $input);
+  $cols = strlen($input);
+
+  for ($r = 1; $r < $rows; $r++){
+    $row = '';
+
+    for ($c = 0; $c < $cols; $c++){
+      $safe = true;
+
+      $left = $tiles[$r - 1][$c - 1] ?: '.';
+      $center = $tiles[$r - 1][$c] ?: '.';
+      $right = $tiles[$r - 1][$c + 1] ?: '.';
+
+      $pattern = $left.$center.$right;
+
+      if ($pattern == '^^.' || $pattern == '.^^' || $pattern == '^..' || $pattern == '..^')
+        $safe = false;
+
+      $row .= $safe ? '.' : '^';
+    }
+
+    $tiles[] = $row;
+  }
+
+  $chars = count_chars(implode('', $tiles));
+
+  return $chars[ord('.')];
+}
+
+function day18_1(){
+  $rows = 40;
+
+  return day18_calc($rows);
+}
+
+function day18_2(){
+  $rows = 400000;
+
+  return day18_calc($rows);
+}
+
+function day19_1(){
+  $elves = 3005290;
+
+  $presents = array_fill(1, $elves, 1);
+
+  reset($presents);
+  do {
+    key($presents) ?: reset($presents);
+    next($presents) ?: reset($presents);
+
+    unset($presents[key($presents)]);
+  } while (count($presents) > 1);
+
+  reset($presents);
+  return key($presents);
+}
+
+function day19_2(){
+  $elves = 3005290;
+  $elves = 5;
+
+  $presents = array_fill(1, $elves, 1);
+
+  reset($presents);
+  do {
+    $key = key($presents) ?: reset($presents);
+    next($presents) ?: reset($presents);
+
+    $steal = floor((count($presents) / 2) + $key) % count($presents);
+    unset($presents[$steal]);
+
+    var_dump($key, $steal, key($presents), $presents);
+    if (++$n == 2) exit;
+  } while (count($presents) > 1);
+
+  reset($presents);
+  return key($presents);
+}
+
