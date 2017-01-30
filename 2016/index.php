@@ -10,75 +10,11 @@ echo "\n".strtoupper('adventofcode.com 2016')."\n\n";
 $bench = bench();
 
 function show_answers($a = ''){
-  if (!$a || $a == '1.1') print_answer('1.1', day1(1));
-  if (!$a || $a == '1.2') print_answer('1.2', day1(2));
+  list($day, $part) = explode('.', $a);
 
-  if (!$a || $a == '2.1') print_answer('2.1', day2_1());
-  if (!$a || $a == '2.2') print_answer('2.2', day2_2());
-
-  if (!$a || $a == '3.1') print_answer('3.1', day3_1());
-  if (!$a || $a == '3.2') print_answer('3.2', day3_2());
-
-  if (!$a || $a == '4.1') print_answer('4.1', day4_1());
-  if (!$a || $a == '4.2') print_answer('4.2', day4_2());
-
-  if (!$a || $a == '5.1') print_answer('5.1', day5_1());
-  if (!$a || $a == '5.2') print_answer('5.2', day5_2());
-
-  if (!$a || $a == '6.1') print_answer('6.1', day6_1());
-  if (!$a || $a == '6.2') print_answer('6.2', day6_2());
-
-  if (!$a || $a == '7.1') print_answer('7.1', day7_1());
-  if (!$a || $a == '7.2') print_answer('7.2', day7_2());
-
-  if (!$a || $a == '8.1') print_answer('8.1', day8_1());
-  if (!$a || $a == '8.2') print_answer('8.2', day8_2());
-
-  if (!$a || $a == '9.1') print_answer('9.1', day9_1());
-  if (!$a || $a == '9.2') print_answer('9.2', day9_2());
-
-  if (!$a || $a == '10.1') print_answer('10.1', day10_1());
-  if (!$a || $a == '10.2') print_answer('10.2', day10_2());
-
-  if (!$a || $a == '11.1') print_answer('11.1', day11_1());
-  if (!$a || $a == '11.2') print_answer('11.2', day11_2());
-
-  if (!$a || $a == '12.1') print_answer('12.1', day12_1());
-  if (!$a || $a == '12.2') print_answer('12.2', day12_2());
-
-  if (!$a || $a == '13.1') print_answer('13.1', day13_1());
-  if (!$a || $a == '13.2') print_answer('13.2', day13_2());
-
-  if (!$a || $a == '14.1') print_answer('14.1', day14_1());
-  if (!$a || $a == '14.2') print_answer('14.2', day14_2());
-
-  if (!$a || $a == '15.1') print_answer('15.1', day15_1());
-  if (!$a || $a == '15.2') print_answer('15.2', day15_2());
-
-  if (!$a || $a == '16.1') print_answer('16.1', day16_1());
-  if (!$a || $a == '16.2') print_answer('16.2', day16_2());
-
-  if (!$a || $a == '17.1') print_answer('17.1', day17_1());
-
-  if (!$a || $a == '18.1') print_answer('18.1', day18_1());
-  if (!$a || $a == '18.2') print_answer('18.2', day18_2());
-
-  if (!$a || $a == '19.1') print_answer('19.1', day19_1());
-  if (!$a || $a == '19.2') print_answer('19.2', day19_2());
-
-  if (!$a || $a == '20.1') print_answer('20.1', day20_1());
-
-  if (!$a || $a == '21.1') print_answer('21.1', day21(1));
-  if (!$a || $a == '21.2') print_answer('21.2', day21(2));
-
-  if (!$a || $a == '22.1') print_answer('22.1', day22_1());
-
-  if (!$a || $a == '23.1') print_answer('23.1', day23(0));
-  if (!$a || $a == '23.2') print_answer('23.2', day23(1));
-
-  if (!$a || $a == '24.1') print_answer('24.1', day24());
-
-  if (!$a || $a == '25.1') print_answer('25.1', day25(3010, 3019));
+  $func = 'day'.$day.'_'.$part;
+  if ($day && $part && function_exists($func))
+    print_answer($a, call_user_func($func));
 }
 
 show_answers($argv[1]);
@@ -86,7 +22,7 @@ show_answers($argv[1]);
 function print_answer($day, $answer){
   global $bench;
 
-  echo $day.' : '.$answer.' ['.round(bench(TRUE, $bench, bench()), 2).'s]'."\n";
+  echo $day.' : '.$answer.bench_print()."\n";
 
   $bench = bench();
 }
@@ -103,7 +39,12 @@ function bench($calc = FALSE, $start = FALSE, $end = FALSE){
   }
 }
 
-function day1($part = 1){
+function bench_print(){
+  global $bench;
+
+  return ' ['.round(bench(TRUE, $bench, bench()), 2).'s]';
+}
+function day1_blocks($part){
   $file = file_get_contents('day1.txt');
   $data = explode(', ', $file);
 
@@ -152,9 +93,15 @@ function day1($part = 1){
 	  }
   }
 
-  var_dump($visited); exit;
-
   return abs($x) + abs($y);
+}
+
+function day1_1(){
+  return day1_blocks(1);
+}
+
+function day1_2(){
+  return day1_blocks(2);
 }
 
 function day2_code($keypad, $x, $y){
@@ -802,8 +749,51 @@ function day11_1(){
   var_dump($floors);
 }
 
+function day12_interpreter($data, &$register){
+  list($instruction, $value, $to) = explode(' ', $data);
+
+  /*$debug = ++$n.') '.str_pad($data, 10, ' ', STR_PAD_RIGHT)."\t".key($datas);
+  $d = $register['d'];*/
+
+  switch ($instruction){
+    case 'cpy' :
+      if (preg_match('/\D/', $value))
+        $value = $register[$value];
+
+      $register[$to] += $value;
+      next($datas);
+      break;
+
+    case 'inc' :
+      $register[$value]++;
+      next($datas);
+      break;
+
+    case 'dec' :
+      $register[$value]--;
+      next($datas);
+      break;
+
+    case 'jnz' :
+      if (preg_match('/\D/', $value))
+        $value = $register[$value];
+
+      if ($value <> 0){
+        for ($i = 0; $i < abs($to); $i++)
+          $to < 0 ? prev($datas) : next($datas);
+      }else
+        next($datas);
+      break;
+  }
+
+  /*$debug .= ' > '.key($datas)."\t".' [ a = '.str_pad($register['a'], 10, ' ', STR_PAD_LEFT).' / b = '.str_pad($register['b'], 10, ' ', STR_PAD_LEFT).' / c = '.str_pad($register['c'], 10, ' ', STR_PAD_LEFT).' / d = '.str_pad($register['d'], 10, ' ', STR_PAD_LEFT).' ]'."\n";
+
+  if ($register['d'] <> $d)
+    echo $debug;*/
+}
+
 function day12_1(){
-  $file = file_get_contents('day12test.txt');
+  $file = file_get_contents('day12.txt');
   $datas = explode("\r\n", $file);
 
   $register = array(
@@ -814,44 +804,7 @@ function day12_1(){
   );
 
   while ($data = current($datas)){
-    list($instruction, $value, $to) = explode(' ', $data);
-
-    switch ($instruction){
-      case 'cpy' :
-        if (preg_match('/\D/', $value))
-          $value = $register[$value];
-
-        $register[$to] += $value;
-        next($datas);
-        break;
-
-      case 'inc' :
-        $register[$value]++;
-        next($datas);
-        break;
-
-      case 'dec' :
-        $register[$value]--;
-        next($datas);
-        break;
-
-      case 'jnz' :
-        if (preg_match('/\D/', $value))
-          $value = $register[$value];
-
-        if ($value <> 0){
-          for ($i = 0; $i < abs($to); $i++)
-            $to < 0 ? prev($datas) : next($datas);
-        }else
-          next($datas);
-        break;
-    }
-
-    /*$n++;
-    if ($n == 15)
-      exit;*/
-
-    #var_dump($n++, key($datas), $register);
+    day12_interpreter($data, $register);
   }
 
   var_dump($register);
@@ -1072,21 +1025,272 @@ function day19_2(){
   $elves = 3005290;
   $elves = 5;
 
-  $presents = array_fill(1, $elves, 1);
+  $presents = range(1, $elves);
 
-  reset($presents);
+  $key = 0;
   do {
-    $key = key($presents) ?: reset($presents);
-    next($presents) ?: reset($presents);
+    $steal = floor(count($presents) / 2) % count($presents);
+    unset($presents[$steal + $key - 1]);
+    #array_slice($presents, $steal - 1, 1, false);
+    #var_dump($presents);
 
-    $steal = floor((count($presents) / 2) + $key) % count($presents);
-    unset($presents[$steal]);
+    if (++$key >= count($presents)) $key = 0;
+    reset($presents);
 
-    var_dump($key, $steal, key($presents), $presents);
-    if (++$n == 2) exit;
+    if (++$n % 1000 == 0) echo bench_print()."\n";
   } while (count($presents) > 1);
 
   reset($presents);
-  return key($presents);
+  return current($presents);
 }
 
+function day20_1(){
+  $file = file_get_contents('day20.txt');
+  $datas = explode("\r\n", $file);
+
+  $blocks = array();
+  foreach ($datas as $data){
+    list($start, $end) = explode('-', $data);
+
+    $blocks[$start] = $end;
+  }
+
+  ksort($blocks);
+
+  $lowest = 0;
+  while (list($start, $end) = each($blocks)){
+    if ($lowest < $start)
+      return $lowest;
+
+    if ($lowest < $end)
+      $lowest = $end + 1;
+  }
+}
+
+function day20_2(){
+  $file = file_get_contents('day20.txt');
+  $datas = explode("\r\n", $file);
+
+  $blocks = array();
+  foreach ($datas as $data){
+    list($start, $end) = explode('-', $data);
+
+    $blocks[$start] = $end;
+  }
+
+  ksort($blocks);
+
+  $lowest = $allowed = 0;
+  while (list($start, $end) = each($blocks)){
+    if ($lowest < $start)
+      $allowed += $start - $lowest;
+
+    if ($lowest < $end)
+      $lowest = $end + 1;
+  }
+
+  return $allowed;
+}
+
+function day21_1(){
+  $file = file_get_contents('day21.txt');
+  $datas = explode("\r\n", $file);
+
+  $password = 'abcdefgh';
+
+  foreach ($datas as $data){
+    $password_prev = $password;
+
+    if (preg_match('/^swap position (\d+) with position (\d+)$/', $data, $matches)){
+      list($foo, $x, $y) = $matches;
+
+      $letter_x = $password{$x};
+      $letter_y = $password{$y};
+
+      $password{$x} = $letter_y;
+      $password{$y} = $letter_x;
+    }elseif (preg_match('/^swap letter (\w+) with letter (\w+)$/', $data, $matches)){
+      list($foo, $x, $y) = $matches;
+
+      $password = str_replace($x, '%x', $password);
+      $password = str_replace($y, '%y', $password);
+
+      $password = str_replace('%x', $y, $password);
+      $password = str_replace('%y', $x, $password);
+    }elseif (preg_match('/^rotate (left|right) (\d+) step[s]?$/', $data, $matches)){
+      list($foo, $direction, $steps) = $matches;
+
+      switch ($direction){
+        case 'left' :
+          $string = substr($password, 0, $steps);
+          $password = substr($password, $steps).$string;
+          break;
+
+        case 'right' :
+          $string = substr($password, $steps * -1);
+          $password = $string.substr($password, 0, $steps * -1);
+          break;
+      }
+    }elseif (preg_match('/^rotate based on position of letter (\w+)$/', $data, $matches)){
+      list($foo, $letter) = $matches;
+
+      $index = (strpos($password, $letter) + 1) % (strlen($password) - 1);
+
+      $string = substr($password, $index * -1);
+      $password = $string.substr($password, 0, $index * -1);
+    }elseif (preg_match('/^reverse positions (\d+) through (\d+)$/', $data, $matches)){
+      list($foo, $x, $y) = $matches;
+
+      $string = strrev(substr($password, $x, $y - $x + 1));
+
+      $password = ($x > 0 ? substr($password, 0, $x) : '').$string.($y < strlen($password) ? substr($password, $y + 1, strlen($password) - $y - 1) : '');
+    }elseif (preg_match('/^move position (\d+) to position (\d+)$/', $data, $matches)){
+      list($foo, $x, $y) = $matches;
+
+      $letter_x = $password{$x};
+      $password = substr($password, 0, $x).substr($password, $x + 1);
+
+      $password = substr($password, 0, $y).$letter_x.substr($password, $y);
+    }
+
+    var_dump($data, $password_prev.' > '.$password);
+  }
+
+  return $password;
+}
+
+function day22_nodes(){
+  $file = file_get_contents('day22.txt');
+  $datas = explode("\r\n", $file);
+
+  $nodes = array();
+  foreach ($datas as $data){
+    if (preg_match('|^/dev/grid/node-x(\d+)-y(\d+)\s+(\d+)T\s+(\d+)T\s+(\d+)T\s+\d+%$|', $data, $matches)){
+      list($foo, $x, $y, $size, $used, $avail, $pct) = $matches;
+
+      $nodes[$x.'.'.$y] = array('size' => $size, 'used' => $used, 'avail' => $avail);
+    }
+  }
+
+  return $nodes;
+}
+
+function day22_print_grid($nodes, $goal){
+  global $max_x, $max_y;
+
+  echo str_pad("", 5, " ");
+
+  // print nodes
+  for ($y = -1; $y <= $max_y; $y++){
+    for ($x = 0; $x <= $max_x; $x++){
+      if ($y < 0)
+        echo str_pad($x, 5, " ", STR_PAD_BOTH);
+      else{
+        if ($y >= 0 && $x == 0)
+          echo str_pad($y, 3, " ", STR_PAD_LEFT)." ";
+
+        $position = $x.'.'.$y;
+        $node = $nodes[$position];
+
+        $draw = '.';
+        if ($position == $goal)
+          $draw = 'G';
+        elseif ($node['used'] == 0)
+          $draw = '_';
+
+        if ($position == '0.0')
+          $draw = '('.$draw.')';
+
+        echo str_pad($draw, 5, " ", STR_PAD_BOTH);
+      }
+    }
+
+    echo "\n ";
+  }
+
+  echo "\n";
+
+  sleep(3);
+}
+
+function day22_find($nodes, $goal){
+  list($x, $y) = explode('.', $goal);
+
+  // 1 left (x - 1, y)
+  $position = --$x.'.'.$y;
+  if (array_key_exists($position, $nodes) && day22_move($nodes, $goal, $position))
+    return $position;
+
+  // 2 down (x, y + 1)
+  $position = $x.'.'.++$y;
+  if (array_key_exists($position, $nodes) && day22_move($nodes, $goal, $position))
+    return $position;
+
+  // 3 up (x, y - 1)
+  $position = $x.'.'.--$y;
+  if (array_key_exists($position, $nodes) && day22_move($nodes, $goal, $position))
+    return $position;
+
+  // 4 right (x + 1, y)
+  $position = ++$x.'.'.$y;
+  if (array_key_exists($position, $nodes) && day22_move($nodes, $goal, $position))
+    return $position;
+
+  return false;
+}
+
+function day22_move($nodes, $from, $to){
+  if ($nodes[$to]['avail'] >= $nodes[$from]['size']){
+    $nodes[$to]['used'] += $nodes[$from]['used'];
+    $nodes[$to]['avail'] -= $nodes[$from]['used'];
+
+    $nodes[$from]['avail'] = $nodes[$from]['size'];
+    $nodes[$from]['used'] = 0;
+
+    return true;
+  }
+
+  return false;
+}
+
+function day22_1(){
+  $nodes = day22_nodes();
+
+  $pairs = 0;
+  foreach ($nodes as $position => $node){
+    foreach ($nodes as $position2 => $node2){
+      if ($node['used'] > 0 && $position <> $position2 && $node['used'] < $node2['avail'])
+        $pairs++;
+    }
+  }
+
+  return $pairs;
+}
+
+function day22_2(){
+  global $max_x, $max_y;
+
+  $nodes = day22_nodes();
+
+  $max_x = 0;
+  foreach ($nodes as $position => $node){
+    list($x, $y) = explode('.', $position);
+
+    $max_x = $x > $max_x ? $x : $max_x;
+    $max_y = $y > $max_y ? $y : $max_y;
+  }
+
+  $goal = $max_x.'.0';
+
+  day22_print_grid($nodes, $goal);
+
+  do {
+    $goal = day22_find($nodes, $goal);
+
+    day22_print_grid($nodes, $goal);
+  } while ($goal <> '0.0');
+}
+
+function day23_1(){
+
+}
